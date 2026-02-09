@@ -8,6 +8,103 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 
+// Preset configurations for UI
+const PRESETS = {
+  minimal: {
+    name: "Minimal",
+    description: "Solo grid, sin elementos extra",
+    theme: "github",
+    bg: false,
+    onlyGrid: true,
+    margin: 5,
+    radius: 2,
+    gap: 1,
+    showMonths: false,
+    showDays: false,
+    showFooter: false,
+  },
+  compact: {
+    name: "Compact",
+    description: "Grid compacto con fondo oscuro",
+    theme: "github-dark",
+    bg: true,
+    onlyGrid: true,
+    margin: 10,
+    radius: 1,
+    gap: 1,
+    showMonths: false,
+    showDays: false,
+    showFooter: false,
+  },
+  classic: {
+    name: "Classic",
+    description: "Estilo clásico con meses",
+    theme: "classic",
+    bg: true,
+    onlyGrid: false,
+    margin: 20,
+    radius: 2,
+    gap: 2,
+    showMonths: true,
+    showDays: false,
+    showFooter: true,
+  },
+  modern: {
+    name: "Modern",
+    description: "Estilo moderno con días",
+    theme: "modern",
+    bg: true,
+    onlyGrid: false,
+    margin: 20,
+    radius: 3,
+    gap: 2,
+    showMonths: false,
+    showDays: true,
+    showFooter: true,
+  },
+  full: {
+    name: "Full",
+    description: "Todo activado",
+    theme: "github",
+    bg: true,
+    onlyGrid: false,
+    margin: 25,
+    radius: 2,
+    gap: 2,
+    showMonths: true,
+    showDays: true,
+    showFooter: true,
+  },
+  dark: {
+    name: "Dark",
+    description: "Tema oscuro completo",
+    theme: "github-dark",
+    bg: true,
+    onlyGrid: false,
+    margin: 20,
+    radius: 2,
+    gap: 2,
+    showMonths: true,
+    showDays: false,
+    showFooter: true,
+  },
+  coder: {
+    name: "Coder",
+    description: "Tema coder con Dracula",
+    theme: "dracula",
+    bg: true,
+    onlyGrid: false,
+    margin: 20,
+    radius: 2,
+    gap: 2,
+    showMonths: true,
+    showDays: false,
+    showFooter: true,
+  },
+} as const;
+
+type PresetKey = keyof typeof PRESETS;
+
 export default function Page() {
   const [username, setUsername] = useState("vemec")
   const [theme, setTheme] = useState("github")
@@ -20,8 +117,64 @@ export default function Page() {
   const [margin, setMargin] = useState([20])
   const [radius, setRadius] = useState([2])
   const [gap, setGap] = useState([2])
+  const [selectedPreset, setSelectedPreset] = useState<PresetKey | "custom">("custom")
+
+  // Apply preset configuration
+  const applyPreset = (presetKey: PresetKey | "custom") => {
+    if (presetKey === "custom") {
+      setSelectedPreset("custom")
+      return
+    }
+
+    const preset = PRESETS[presetKey]
+    setTheme(preset.theme)
+    setBg(preset.bg)
+    setOnlyGrid(preset.onlyGrid)
+    setMargin([preset.margin])
+    setRadius([preset.radius])
+    setGap([preset.gap])
+    setShowMonths(preset.showMonths)
+    setShowDays(preset.showDays)
+    setShowFooter(preset.showFooter)
+    setSelectedPreset(presetKey)
+  }
+
+  // Check if current settings match a preset
+  const currentPreset = useMemo(() => {
+    for (const [key, preset] of Object.entries(PRESETS)) {
+      if (
+        theme === preset.theme &&
+        bg === preset.bg &&
+        onlyGrid === preset.onlyGrid &&
+        margin[0] === preset.margin &&
+        radius[0] === preset.radius &&
+        gap[0] === preset.gap &&
+        showMonths === preset.showMonths &&
+        showDays === preset.showDays &&
+        showFooter === preset.showFooter
+      ) {
+        return key as PresetKey
+      }
+    }
+    return "custom" as const
+  }, [theme, bg, onlyGrid, margin, radius, gap, showMonths, showDays, showFooter])
+
+  // Update selectedPreset when settings change
+  useMemo(() => {
+    setSelectedPreset(currentPreset)
+  }, [currentPreset])
 
   const chartUrl = useMemo(() => {
+    // If using a preset, use preset parameter for cleaner URL
+    if (selectedPreset !== "custom") {
+      const params = new URLSearchParams({
+        preset: selectedPreset,
+        format,
+      })
+      return `/api/chart/${username}?${params.toString()}`
+    }
+
+    // Otherwise use individual parameters
     const params = new URLSearchParams({
       format,
       theme,
@@ -35,7 +188,7 @@ export default function Page() {
       gap: gap[0].toString(),
     })
     return `/api/chart/${username}?${params.toString()}`
-  }, [username, theme, format, bg, onlyGrid, showMonths, showDays, showFooter, margin, radius, gap])
+  }, [username, theme, format, bg, onlyGrid, showMonths, showDays, showFooter, margin, radius, gap, selectedPreset])
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -101,6 +254,27 @@ export default function Page() {
                     <SelectItem value="png">PNG</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Preset */}
+              <div className="space-y-2">
+                <Label>Preconfiguración</Label>
+                <Select value={selectedPreset} onValueChange={(value) => applyPreset(value as PresetKey | "custom")}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="custom">Personalizado</SelectItem>
+                    {Object.entries(PRESETS).map(([key, preset]) => (
+                      <SelectItem key={key} value={key}>
+                        {preset.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedPreset !== "custom" && (
+                  <p className="text-xs text-gray-500">{PRESETS[selectedPreset].description}</p>
+                )}
               </div>
 
               {/* Margin Slider */}

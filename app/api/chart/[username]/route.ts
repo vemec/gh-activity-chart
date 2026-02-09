@@ -2,6 +2,89 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fetchContributions } from '@/lib/github';
 import { renderChart } from '@/lib/renderer';
 
+// Preset configurations
+const PRESETS = {
+    minimal: {
+        theme: 'github' as const,
+        bg: false,
+        onlyGrid: true,
+        margin: 5,
+        radius: 2,
+        gap: 1,
+        showMonths: false,
+        showDays: false,
+        showFooter: false,
+    },
+    compact: {
+        theme: 'github-dark' as const,
+        bg: true,
+        onlyGrid: true,
+        margin: 10,
+        radius: 1,
+        gap: 1,
+        showMonths: false,
+        showDays: false,
+        showFooter: false,
+    },
+    classic: {
+        theme: 'classic' as const,
+        bg: true,
+        onlyGrid: false,
+        margin: 20,
+        radius: 2,
+        gap: 2,
+        showMonths: true,
+        showDays: false,
+        showFooter: true,
+    },
+    modern: {
+        theme: 'modern' as const,
+        bg: true,
+        onlyGrid: false,
+        margin: 20,
+        radius: 3,
+        gap: 2,
+        showMonths: false,
+        showDays: true,
+        showFooter: true,
+    },
+    full: {
+        theme: 'github' as const,
+        bg: true,
+        onlyGrid: false,
+        margin: 25,
+        radius: 2,
+        gap: 2,
+        showMonths: true,
+        showDays: true,
+        showFooter: true,
+    },
+    dark: {
+        theme: 'github-dark' as const,
+        bg: true,
+        onlyGrid: false,
+        margin: 20,
+        radius: 2,
+        gap: 2,
+        showMonths: true,
+        showDays: false,
+        showFooter: true,
+    },
+    coder: {
+        theme: 'dracula' as const,
+        bg: true,
+        onlyGrid: false,
+        margin: 20,
+        radius: 2,
+        gap: 2,
+        showMonths: true,
+        showDays: false,
+        showFooter: true,
+    },
+} as const;
+
+type PresetKey = keyof typeof PRESETS;
+
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ username: string }> }
@@ -10,17 +93,22 @@ export async function GET(
     const searchParams = request.nextUrl.searchParams;
 
     const year = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined;
-    const theme = (searchParams.get('theme') as 'github' | 'github-dark' | 'classic' | 'modern' | 'nord' | 'solarized' | 'sunset' | 'ocean' | 'dracula' | 'monokai' | 'one-dark' | 'material-dark' | 'tokyo-night' | 'gruvbox' | 'catppuccin') || 'github';
+    const preset = searchParams.get('preset') as PresetKey | null;
+
+    // Get preset configuration or use individual parameters
+    const presetConfig = preset && PRESETS[preset] ? PRESETS[preset] : null;
+
+    const theme = (searchParams.get('theme') as 'github' | 'github-dark' | 'classic' | 'modern' | 'nord' | 'solarized' | 'sunset' | 'ocean' | 'dracula' | 'monokai' | 'one-dark' | 'material-dark' | 'tokyo-night' | 'gruvbox' | 'catppuccin') || presetConfig?.theme || 'github';
     const color = searchParams.get('color') || undefined;
     const format = (searchParams.get('format') || 'svg') as 'svg' | 'png';
-    const bg = searchParams.get('bg') !== 'false';
-    const radius = searchParams.get('radius') ? parseInt(searchParams.get('radius')!) : undefined;
-    const gap = searchParams.get('gap') ? parseInt(searchParams.get('gap')!) : undefined;
-    const onlyGrid = searchParams.get('grid') === 'true';
-    const margin = searchParams.get('margin') ? parseInt(searchParams.get('margin')!) : undefined;
-    const showMonths = searchParams.get('months') === 'true';
-    const showDays = searchParams.get('days') === 'true';
-    const showFooter = searchParams.get('footer') !== 'false';
+    const bg = searchParams.get('bg') !== 'false' && (presetConfig?.bg ?? true);
+    const radius = searchParams.get('radius') ? parseInt(searchParams.get('radius')!) : presetConfig?.radius;
+    const gap = searchParams.get('gap') ? parseInt(searchParams.get('gap')!) : presetConfig?.gap;
+    const onlyGrid = searchParams.get('grid') === 'true' || (presetConfig?.onlyGrid ?? false);
+    const margin = searchParams.get('margin') ? parseInt(searchParams.get('margin')!) : presetConfig?.margin;
+    const showMonths = searchParams.get('months') === 'true' || (presetConfig?.showMonths ?? true);
+    const showDays = searchParams.get('days') === 'true' || (presetConfig?.showDays ?? false);
+    const showFooter = searchParams.get('footer') !== 'false' && (presetConfig?.showFooter ?? true);
 
     try {
         const data = await fetchContributions(username, year);
