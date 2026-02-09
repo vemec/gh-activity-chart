@@ -36,8 +36,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Catppuccin: Modern pastel theme
 
 ### Fixed
+- **Vercel deployment issue**: Removed debug file write operation that caused EROFS errors in production
 - Height calculation corrected to remove extra white margin at bottom of generated images
 - Proper spacing calculation: 7 rows × cellSize + 6 gaps + margins
+
+### Changed
+- **Complete UI translation**: Application fully translated from Spanish to English for better accessibility
+- All user-facing text, labels, descriptions, and preset names now in English
+- Improved international usability and maintainability
 
 ### Technical
 - Added shadcn/ui Slider component for numeric controls
