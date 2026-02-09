@@ -8,14 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Preset configurations** for quick chart setup:
+- **Preset configurations** for quick chart setup (independent of theme selection):
   - Minimal: Clean grid-only layout
-  - Compact: Dark theme compact grid
+  - Compact: Compact grid layout
   - Classic: Traditional style with months
   - Modern: Contemporary design with days
   - Full: Complete chart with all elements
   - Dark: Full dark theme experience
-  - Coder: Developer-focused Dracula theme
+  - Coder: Developer-focused layout
+- **Independent theme selection** - themes can now be combined with any preset for maximum flexibility
 - **Preset parameter support** in API for cleaner URLs
 - Format selection dropdown (PNG/SVG) for chart output format
 - Radius slider (0-5px) for cell corner rounding customization

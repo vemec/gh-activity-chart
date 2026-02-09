@@ -5,7 +5,6 @@ import { renderChart } from '@/lib/renderer';
 // Preset configurations
 const PRESETS = {
     minimal: {
-        theme: 'github' as const,
         bg: false,
         onlyGrid: true,
         margin: 5,
@@ -16,7 +15,6 @@ const PRESETS = {
         showFooter: false,
     },
     compact: {
-        theme: 'github-dark' as const,
         bg: true,
         onlyGrid: true,
         margin: 10,
@@ -27,7 +25,6 @@ const PRESETS = {
         showFooter: false,
     },
     classic: {
-        theme: 'classic' as const,
         bg: true,
         onlyGrid: false,
         margin: 20,
@@ -38,7 +35,6 @@ const PRESETS = {
         showFooter: true,
     },
     modern: {
-        theme: 'modern' as const,
         bg: true,
         onlyGrid: false,
         margin: 20,
@@ -49,7 +45,6 @@ const PRESETS = {
         showFooter: true,
     },
     full: {
-        theme: 'github' as const,
         bg: true,
         onlyGrid: false,
         margin: 25,
@@ -60,7 +55,6 @@ const PRESETS = {
         showFooter: true,
     },
     dark: {
-        theme: 'github-dark' as const,
         bg: true,
         onlyGrid: false,
         margin: 20,
@@ -71,7 +65,6 @@ const PRESETS = {
         showFooter: true,
     },
     coder: {
-        theme: 'dracula' as const,
         bg: true,
         onlyGrid: false,
         margin: 20,
@@ -98,7 +91,7 @@ export async function GET(
     // Get preset configuration or use individual parameters
     const presetConfig = preset && PRESETS[preset] ? PRESETS[preset] : null;
 
-    const theme = (searchParams.get('theme') as 'github' | 'github-dark' | 'classic' | 'modern' | 'nord' | 'solarized' | 'sunset' | 'ocean' | 'dracula' | 'monokai' | 'one-dark' | 'material-dark' | 'tokyo-night' | 'gruvbox' | 'catppuccin') || presetConfig?.theme || 'github';
+    const theme = (searchParams.get('theme') as 'github' | 'github-dark' | 'classic' | 'modern' | 'nord' | 'solarized' | 'sunset' | 'ocean' | 'dracula' | 'monokai' | 'one-dark' | 'material-dark' | 'tokyo-night' | 'gruvbox' | 'catppuccin') || 'github';
     const color = searchParams.get('color') || undefined;
     const format = (searchParams.get('format') || 'svg') as 'svg' | 'png';
     const bg = searchParams.get('bg') !== 'false' && (presetConfig?.bg ?? true);

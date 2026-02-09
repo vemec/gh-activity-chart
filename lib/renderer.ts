@@ -2,8 +2,6 @@ import satori from 'satori';
 import { ContributionData, ContributionDay } from './github';
 import React from 'react';
 import sharp from 'sharp';
-import fs from 'fs/promises';
-import path from 'path';
 
 export interface RenderOptions {
   username: string;
@@ -91,7 +89,6 @@ export async function renderChart(data: ContributionData, options: RenderOptions
 
   const displayWeeks = weeks; // Already limited to 53 weeks
   console.log(`[Renderer] Rendering chart for ${options.username}, format: ${options.format}, displayWeeks: ${displayWeeks.length}`);
-  await fs.writeFile(path.join(process.cwd(), 'debug-weeks.json'), JSON.stringify(displayWeeks, null, 2));
   const width = displayWeeks.length * (cellSize + gap) + (margin * 2) + labelSpaceLeft;
   const footerSpace = (!onlyGrid && showFooter) ? 20 : 0;
   const titleSpace = !onlyGrid ? 25 : 0;

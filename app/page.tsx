@@ -12,8 +12,7 @@ import { Slider } from "@/components/ui/slider"
 const PRESETS = {
   minimal: {
     name: "Minimal",
-    description: "Solo grid, sin elementos extra",
-    theme: "github",
+    description: "Grid only, no extra elements",
     bg: false,
     onlyGrid: true,
     margin: 5,
@@ -25,8 +24,7 @@ const PRESETS = {
   },
   compact: {
     name: "Compact",
-    description: "Grid compacto con fondo oscuro",
-    theme: "github-dark",
+    description: "Compact grid with dark background",
     bg: true,
     onlyGrid: true,
     margin: 10,
@@ -38,8 +36,7 @@ const PRESETS = {
   },
   classic: {
     name: "Classic",
-    description: "Estilo clásico con meses",
-    theme: "classic",
+    description: "Classic style with months",
     bg: true,
     onlyGrid: false,
     margin: 20,
@@ -51,8 +48,7 @@ const PRESETS = {
   },
   modern: {
     name: "Modern",
-    description: "Estilo moderno con días",
-    theme: "modern",
+    description: "Modern style with days",
     bg: true,
     onlyGrid: false,
     margin: 20,
@@ -64,8 +60,7 @@ const PRESETS = {
   },
   full: {
     name: "Full",
-    description: "Todo activado",
-    theme: "github",
+    description: "Everything enabled",
     bg: true,
     onlyGrid: false,
     margin: 25,
@@ -77,8 +72,7 @@ const PRESETS = {
   },
   dark: {
     name: "Dark",
-    description: "Tema oscuro completo",
-    theme: "github-dark",
+    description: "Complete dark theme",
     bg: true,
     onlyGrid: false,
     margin: 20,
@@ -90,8 +84,7 @@ const PRESETS = {
   },
   coder: {
     name: "Coder",
-    description: "Tema coder con Dracula",
-    theme: "dracula",
+    description: "Coder theme with Dracula",
     bg: true,
     onlyGrid: false,
     margin: 20,
@@ -127,7 +120,6 @@ export default function Page() {
     }
 
     const preset = PRESETS[presetKey]
-    setTheme(preset.theme)
     setBg(preset.bg)
     setOnlyGrid(preset.onlyGrid)
     setMargin([preset.margin])
@@ -143,7 +135,6 @@ export default function Page() {
   const currentPreset = useMemo(() => {
     for (const [key, preset] of Object.entries(PRESETS)) {
       if (
-        theme === preset.theme &&
         bg === preset.bg &&
         onlyGrid === preset.onlyGrid &&
         margin[0] === preset.margin &&
@@ -157,7 +148,7 @@ export default function Page() {
       }
     }
     return "custom" as const
-  }, [theme, bg, onlyGrid, margin, radius, gap, showMonths, showDays, showFooter])
+  }, [bg, onlyGrid, margin, radius, gap, showMonths, showDays, showFooter])
 
   // Update selectedPreset when settings change
   useMemo(() => {
@@ -195,29 +186,29 @@ export default function Page() {
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">GitHub Activity Chart</h1>
-          <p className="text-gray-600">Visualiza las contribuciones de GitHub como un gráfico de calor</p>
+          <p className="text-gray-600">Visualize GitHub contributions as a heat map chart</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Configuración del Gráfico</CardTitle>
+            <CardTitle>Chart Configuration</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Username */}
               <div className="space-y-2">
-                <Label htmlFor="username">Usuario de GitHub</Label>
+                <Label htmlFor="username">GitHub Username</Label>
                 <Input
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="ej: octocat"
+                  placeholder="e.g: octocat"
                 />
               </div>
 
               {/* Theme */}
               <div className="space-y-2">
-                <Label>Tema</Label>
+                <Label>Theme</Label>
                 <Select value={theme} onValueChange={(value) => value && setTheme(value)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -244,7 +235,7 @@ export default function Page() {
 
               {/* Format */}
               <div className="space-y-2">
-                <Label>Formato</Label>
+                <Label>Format</Label>
                 <Select value={format} onValueChange={(value) => value && setFormat(value)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -258,13 +249,13 @@ export default function Page() {
 
               {/* Preset */}
               <div className="space-y-2">
-                <Label>Preconfiguración</Label>
+                <Label>Preset</Label>
                 <Select value={selectedPreset} onValueChange={(value) => applyPreset(value as PresetKey | "custom")}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="custom">Personalizado</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
                     {Object.entries(PRESETS).map(([key, preset]) => (
                       <SelectItem key={key} value={key}>
                         {preset.name}
@@ -279,7 +270,7 @@ export default function Page() {
 
               {/* Margin Slider */}
               <div className="space-y-2">
-                <Label>Margen: {margin[0]}px</Label>
+                <Label>Margin: {margin[0]}px</Label>
                 <Slider
                   value={margin}
                   onValueChange={(value) => setMargin(Array.isArray(value) ? value : [value])}
@@ -292,7 +283,7 @@ export default function Page() {
 
               {/* Radius Slider */}
               <div className="space-y-2">
-                <Label>Radio de Celdas: {radius[0]}px</Label>
+                <Label>Cell Radius: {radius[0]}px</Label>
                 <Slider
                   value={radius}
                   onValueChange={(value) => setRadius(Array.isArray(value) ? value : [value])}
@@ -305,7 +296,7 @@ export default function Page() {
 
               {/* Gap Slider */}
               <div className="space-y-2">
-                <Label>Separación de Celdas: {gap[0]}px</Label>
+                <Label>Cell Spacing: {gap[0]}px</Label>
                 <Slider
                   value={gap}
                   onValueChange={(value) => setGap(Array.isArray(value) ? value : [value])}
@@ -320,23 +311,23 @@ export default function Page() {
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <Switch id="bg" checked={bg} onCheckedChange={setBg} />
-                  <Label htmlFor="bg">Fondo</Label>
+                  <Label htmlFor="bg">Background</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch id="grid" checked={onlyGrid} onCheckedChange={setOnlyGrid} />
-                  <Label htmlFor="grid">Solo Grid</Label>
+                  <Label htmlFor="grid">Grid Only</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch id="months" checked={showMonths} onCheckedChange={setShowMonths} />
-                  <Label htmlFor="months">Mostrar Meses</Label>
+                  <Label htmlFor="months">Show Months</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch id="days" checked={showDays} onCheckedChange={setShowDays} />
-                  <Label htmlFor="days">Mostrar Días</Label>
+                  <Label htmlFor="days">Show Days</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch id="footer" checked={showFooter} onCheckedChange={setShowFooter} />
-                  <Label htmlFor="footer">Mostrar Footer</Label>
+                  <Label htmlFor="footer">Show Footer</Label>
                 </div>
               </div>
             </div>
@@ -345,7 +336,7 @@ export default function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Gráfico Generado</CardTitle>
+            <CardTitle>Generated Chart</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex justify-center">
@@ -360,21 +351,21 @@ export default function Page() {
             </div>
             <div className="mt-6 space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">URL de la API:</h3>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">API URL:</h3>
                 <div className="p-3 bg-gray-100 rounded text-sm font-mono break-all">
                   {typeof window !== 'undefined' ? window.location.origin : ''}{chartUrl}
                 </div>
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">Uso en GitHub (Markdown):</h3>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">GitHub Usage (Markdown):</h3>
                 <div className="p-3 bg-gray-100 rounded text-sm font-mono break-all">
                   ![GitHub Activity Chart]({typeof window !== 'undefined' ? window.location.origin : ''}{chartUrl})
                 </div>
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">Uso en HTML:</h3>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">HTML Usage:</h3>
                 <div className="p-3 bg-gray-100 rounded text-sm font-mono break-all">
                   &lt;img src="{typeof window !== 'undefined' ? window.location.origin : ''}{chartUrl}" alt="GitHub Activity Chart" /&gt;
                 </div>
