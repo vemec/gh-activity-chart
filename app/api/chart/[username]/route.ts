@@ -94,7 +94,8 @@ export async function GET(
     const theme = (searchParams.get('theme') as 'github' | 'github-dark' | 'classic' | 'modern' | 'nord' | 'solarized' | 'sunset' | 'ocean' | 'dracula' | 'monokai' | 'one-dark' | 'material-dark' | 'tokyo-night' | 'gruvbox' | 'catppuccin') || 'github';
     const color = searchParams.get('color') || undefined;
     const format = (searchParams.get('format') || 'svg') as 'svg' | 'png';
-    const bg = searchParams.get('bg') !== 'false' && (presetConfig?.bg ?? true);
+    const bgParam = searchParams.get('bg');
+    const bg = bgParam === null ? (presetConfig?.bg ?? true) : bgParam === 'true';
     const radius = searchParams.get('radius') ? parseInt(searchParams.get('radius')!) : presetConfig?.radius;
     const gap = searchParams.get('gap') ? parseInt(searchParams.get('gap')!) : presetConfig?.gap;
     const onlyGrid = searchParams.get('grid') === 'true' || (presetConfig?.onlyGrid ?? false);

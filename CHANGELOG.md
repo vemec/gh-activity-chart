@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Coder: Developer-focused layout
 - **Independent theme selection** - themes can now be combined with any preset for maximum flexibility
 - **Preset parameter support** in API for cleaner URLs
+- **Vercel Analytics integration** for usage tracking and insights
 - Format selection dropdown (PNG/SVG) for chart output format
 - Radius slider (0-5px) for cell corner rounding customization
 - Gap slider (0-5px) for spacing between activity cells
