@@ -78,6 +78,13 @@ export default function Page() {
                     <SelectItem value="solarized">Solarized</SelectItem>
                     <SelectItem value="sunset">Sunset</SelectItem>
                     <SelectItem value="ocean">Ocean</SelectItem>
+                    <SelectItem value="dracula">Dracula</SelectItem>
+                    <SelectItem value="monokai">Monokai</SelectItem>
+                    <SelectItem value="one-dark">One Dark</SelectItem>
+                    <SelectItem value="material-dark">Material Dark</SelectItem>
+                    <SelectItem value="tokyo-night">Tokyo Night</SelectItem>
+                    <SelectItem value="gruvbox">Gruvbox</SelectItem>
+                    <SelectItem value="catppuccin">Catppuccin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

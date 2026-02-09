@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - GitHub markdown syntax for embedding
   - HTML img tag usage
 - Real-time chart updates when adjusting customization controls
+- **New classic programmer themes:**
+  - Dracula: Popular dark theme with purple/pink accents
+  - Monokai: Classic Sublime Text theme
+  - One Dark: VS Code's popular dark theme
+  - Material Dark: Material Design inspired theme
+  - Tokyo Night: Modern dark theme with blue tones
+  - Gruvbox: Community favorite with earthy colors
+  - Catppuccin: Modern pastel theme
 
 ### Fixed
 - Height calculation corrected to remove extra white margin at bottom of generated images
