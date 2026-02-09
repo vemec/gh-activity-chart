@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -111,6 +111,12 @@ export default function Page() {
   const [radius, setRadius] = useState([2])
   const [gap, setGap] = useState([2])
   const [selectedPreset, setSelectedPreset] = useState<PresetKey | "custom">("custom")
+  const [origin, setOrigin] = useState("")
+
+  // Initialize origin on client side to avoid hydration mismatch
+  useEffect(() => {
+    setOrigin(window.location.origin)
+  }, [])
 
   // Apply preset configuration
   const applyPreset = (presetKey: PresetKey | "custom") => {
@@ -353,21 +359,21 @@ export default function Page() {
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">API URL:</h3>
                 <div className="p-3 bg-gray-100 rounded text-sm font-mono break-all">
-                  {typeof window !== 'undefined' ? window.location.origin : ''}{chartUrl}
+                  {origin}{chartUrl}
                 </div>
               </div>
 
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">GitHub Usage (Markdown):</h3>
                 <div className="p-3 bg-gray-100 rounded text-sm font-mono break-all">
-                  ![GitHub Activity Chart]({typeof window !== 'undefined' ? window.location.origin : ''}{chartUrl})
+                  ![GitHub Activity Chart]({origin}{chartUrl})
                 </div>
               </div>
 
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">HTML Usage:</h3>
                 <div className="p-3 bg-gray-100 rounded text-sm font-mono break-all">
-                  &lt;img src="{typeof window !== 'undefined' ? window.location.origin : ''}{chartUrl}" alt="GitHub Activity Chart" /&gt;
+                  &lt;img src="{origin}{chartUrl}" alt="GitHub Activity Chart" /&gt;
                 </div>
               </div>
             </div>
