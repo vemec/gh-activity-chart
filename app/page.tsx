@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { type ThemeName } from "@/lib/themes"
 import { type PresetKey } from "@/lib/presets"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function Page() {
   const { state, actions, computed } = useChartUI()
@@ -285,6 +286,16 @@ export default function Page() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-16 py-8 border-t border-gray-200 dark:border-gray-800">
+        <div className="max-w-6xl mx-auto px-8 flex justify-between items-center">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            GitHub Activity Chart - Visualize your GitHub contributions
+          </div>
+          <ThemeToggle />
+        </div>
+      </footer>
     </div>
   )
 }

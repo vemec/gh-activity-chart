@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dedicated hooks folder** with organized structure and documentation
 - **Preset unification**: Consolidated PRESETS and PRESETS_UI into single source of truth in `lib/presets.ts`
 - **Next.js Image configuration**: Added `images.localPatterns` to allow API routes with query strings, fixing local image loading issues
+- **Theme toggle functionality**: Added dark/light theme support with toggle button in footer using next-themes
 
 ### Changed
 - **UI component refactoring**: Main page component reduced from 350+ lines to ~250 lines using custom hooks
