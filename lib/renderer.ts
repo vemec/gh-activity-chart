@@ -17,7 +17,8 @@ export interface RenderOptions {
   margin?: number; // 0 to 100
   showMonths?: boolean;
   showDays?: boolean;
-  showFooter?: boolean;
+  showScale?: boolean;
+  showUsername?: boolean;
 }
 
 const THEMES = {
@@ -52,7 +53,8 @@ export async function renderChart(data: ContributionData, options: RenderOptions
     margin = 20,
     showMonths = false,
     showDays = false,
-    showFooter = true
+    showScale = true,
+    showUsername = true
   } = options;
 
   let colors = THEMES[theme as keyof typeof THEMES] || THEMES.github;
@@ -107,12 +109,13 @@ export async function renderChart(data: ContributionData, options: RenderOptions
   const displayWeeks = weeks; // Weeks from last year to this year
   console.log(`[Renderer] Rendering chart for ${options.username}, format: ${options.format}, displayWeeks: ${displayWeeks.length}`);
   const width = displayWeeks.length * (cellSize + gap) + (margin * 2) + labelSpaceLeft;
-  const footerSpace = (!onlyGrid && showFooter) ? 20 : 0;
+  const scaleSpace = (!onlyGrid && showScale) ? 20 : 0;
+  const usernameSpace = (!onlyGrid && showUsername) ? 20 : 0;
   const titleSpace = !onlyGrid ? 25 : 0;
   const monthsSpace = showMonths ? 20 : 0;
 
-  // Height calculation: 7 rows of cells + 6 gaps between them + top/bottom margins + title + footer + months
-  const height = 7 * cellSize + 6 * gap + (margin * 2) + titleSpace + footerSpace + monthsSpace;
+  // Height calculation: 7 rows of cells + 6 gaps between them + top/bottom margins + title + scale + username + months
+  const height = 7 * cellSize + 6 * gap + (margin * 2) + titleSpace + scaleSpace + usernameSpace + monthsSpace;
 
   console.log(`[Renderer] showMonths: ${showMonths}`);
 
@@ -170,36 +173,45 @@ export async function renderChart(data: ContributionData, options: RenderOptions
     });
   });
 
-  // Add footer with "Less | More" and color scale
-  if (showFooter) {
-    const footerY = height - margin - 27;
+  // Add scale with "Less | More" and color scale
+  if (showScale) {
+    const scaleY = height - margin - (showUsername ? 40 : 27);
     const textColor = theme === 'github-dark' ? '#c9d1d9' : '#24292e';
 
-    // Calculate footer width: "Less" + 5 squares + gaps + "More"
+    // Calculate scale width: "Less" + 5 squares + gaps + "More"
     const lessTextWidth = 25; // Approximate width of "Less"
     const scaleSize = cellSize - 2;
     const scaleGap = gap;
     const scaleWidth = colors.length * (scaleSize + scaleGap) - scaleGap; // 5 * (cellSize-2) + 4 * gap
     const moreTextWidth = 30; // Approximate width of "More"
-    const footerWidth = lessTextWidth + scaleWidth + moreTextWidth + 20; // Add some padding
+    const totalScaleWidth = lessTextWidth + scaleWidth + moreTextWidth + 20; // Add some padding
 
-    // Position footer aligned to the right edge of the chart area
+    // Position scale aligned to the right edge of the chart area
     const chartAreaEndX = margin + labelSpaceLeft + (displayWeeks.length - 1) * (cellSize + gap) + cellSize;
-    const footerStartX = chartAreaEndX - footerWidth;
+    const scaleStartX = chartAreaEndX - totalScaleWidth;
 
     // "Less" text
-    svgContent += `<text x="${footerStartX}" y="${footerY}" font-family="Figtree" font-size="9" font-weight="400" fill="${textColor}" opacity="0.6">Less</text>`;
+    svgContent += `<text x="${scaleStartX}" y="${scaleY}" font-family="Figtree" font-size="9" font-weight="400" fill="${textColor}" opacity="0.6">Less</text>`;
 
     // Color scale squares
-    const scaleStartX = footerStartX + lessTextWidth + 5;
+    const squaresStartX = scaleStartX + lessTextWidth + 5;
     colors.forEach((color, i) => {
-      const x = scaleStartX + i * (scaleSize + scaleGap);
-      svgContent += `<rect x="${x}" y="${footerY - scaleSize}" width="${scaleSize}" height="${scaleSize}" fill="${color}" rx="${radius}" ry="${radius}"/>`;
+      const x = squaresStartX + i * (scaleSize + scaleGap);
+      svgContent += `<rect x="${x}" y="${scaleY - scaleSize}" width="${scaleSize}" height="${scaleSize}" fill="${color}" rx="${radius}" ry="${radius}"/>`;
     });
 
     // "More" text
-    const moreX = scaleStartX + colors.length * (scaleSize + scaleGap) - scaleGap + 5;
-    svgContent += `<text x="${moreX}" y="${footerY}" font-family="Figtree" font-size="9" font-weight="400" fill="${textColor}" opacity="0.6">More</text>`;
+    const moreX = squaresStartX + colors.length * (scaleSize + scaleGap) - scaleGap + 5;
+    svgContent += `<text x="${moreX}" y="${scaleY}" font-family="Figtree" font-size="9" font-weight="400" fill="${textColor}" opacity="0.6">More</text>`;
+  }
+
+  // Add username in the bottom left
+  if (showUsername) {
+    const usernameY = height - margin - 10;
+    const textColor = theme === 'github-dark' ? '#c9d1d9' : '#24292e';
+    const usernameX = margin + labelSpaceLeft;
+
+    svgContent += `<text x="${usernameX}" y="${usernameY}" font-family="Figtree" font-size="10" font-weight="500" fill="${textColor}" opacity="0.8">${options.username}</text>`;
   }
 
   svgContent += '</svg>';

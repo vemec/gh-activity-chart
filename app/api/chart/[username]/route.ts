@@ -1,83 +1,98 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchContributions } from '@/lib/github';
 import { renderChart } from '@/lib/renderer';
+import { PRESETS, type PresetKey, type PresetConfig } from '@/lib/presets';
 
-// Preset configurations
-const PRESETS = {
-    minimal: {
-        bg: false,
-        onlyGrid: true,
-        margin: 5,
-        radius: 2,
-        gap: 1,
-        showMonths: false,
-        showDays: false,
-        showFooter: false,
-    },
-    compact: {
-        bg: true,
-        onlyGrid: true,
-        margin: 10,
-        radius: 1,
-        gap: 1,
-        showMonths: false,
-        showDays: false,
-        showFooter: false,
-    },
-    classic: {
-        bg: true,
-        onlyGrid: false,
-        margin: 20,
-        radius: 2,
-        gap: 2,
-        showMonths: true,
-        showDays: false,
-        showFooter: true,
-    },
-    modern: {
-        bg: true,
-        onlyGrid: false,
-        margin: 20,
-        radius: 3,
-        gap: 2,
-        showMonths: false,
-        showDays: true,
-        showFooter: true,
-    },
-    full: {
-        bg: true,
-        onlyGrid: false,
-        margin: 25,
-        radius: 2,
-        gap: 2,
-        showMonths: true,
-        showDays: true,
-        showFooter: true,
-    },
-    dark: {
-        bg: true,
-        onlyGrid: false,
-        margin: 20,
-        radius: 2,
-        gap: 2,
-        showMonths: true,
-        showDays: false,
-        showFooter: true,
-    },
-    coder: {
-        bg: true,
-        onlyGrid: false,
-        margin: 20,
-        radius: 2,
-        gap: 2,
-        showMonths: true,
-        showDays: false,
-        showFooter: true,
-    },
-} as const;
+// Supported themes for the chart
+const SUPPORTED_THEMES = [
+    'github', 'github-dark', 'classic', 'modern', 'nord', 'solarized',
+    'sunset', 'ocean', 'dracula', 'monokai', 'one-dark', 'material-dark',
+    'tokyo-night', 'gruvbox', 'catppuccin'
+] as const;
 
-type PresetKey = keyof typeof PRESETS;
+type Theme = typeof SUPPORTED_THEMES[number];
 
+// Supported output formats
+type Format = 'svg' | 'png';
+
+// Configuration interface for chart rendering
+interface ChartConfig {
+    username: string;
+    theme: Theme;
+    color?: string;
+    format: Format;
+    bg: boolean;
+    radius?: number;
+    gap?: number;
+    size?: number;
+    onlyGrid: boolean;
+    margin?: number;
+    showMonths: boolean;
+    showDays: boolean;
+    showScale: boolean;
+    showUsername: boolean;
+}
+
+/**
+ * Validates and parses a numeric parameter from search params
+ * @param param - The parameter value as string or null
+ * @param defaultValue - Default value if param is null or invalid
+ * @param min - Minimum allowed value (optional)
+ * @param max - Maximum allowed value (optional)
+ * @returns Parsed number or default value
+ */
+function parseNumericParam(
+    param: string | null,
+    defaultValue?: number,
+    min?: number,
+    max?: number
+): number | undefined {
+    if (!param) return defaultValue;
+    const num = parseInt(param, 10);
+    if (isNaN(num)) return defaultValue;
+    if (min !== undefined && num < min) return min;
+    if (max !== undefined && num > max) return max;
+    return num;
+}
+
+/**
+ * Validates and parses a boolean parameter from search params
+ * @param param - The parameter value as string or null
+ * @param defaultValue - Default value if param is null
+ * @returns Parsed boolean
+ */
+function parseBooleanParam(param: string | null, defaultValue: boolean): boolean {
+    if (param === null) return defaultValue;
+    return param === 'true';
+}
+
+/**
+ * GET handler for GitHub activity chart generation
+ *
+ * Query Parameters:
+ * - preset: Predefined visual configuration (see /lib/presets.ts for available options)
+ * - theme: Color theme (github, github-dark, classic, modern, nord, etc.)
+ * - color: Custom hex color (e.g., ff6b6b or #ff6b6b) - overrides theme
+ * - format: Output format (svg or png)
+ * - bg: Show background (true/false)
+ * - radius: Corner radius for squares (0-10)
+ * - gap: Gap between squares (0-5)
+ * - size: Size of individual squares (1-20)
+ * - grid: Show only grid without axes (true/false)
+ * - margin: Chart margin (0-100)
+ * - months: Show month labels (true/false)
+ * - days: Show day labels (true/false)
+ * - scale: Show contribution scale (true/false)
+ * - username: Show username (true/false)
+ * - year: Specific year to fetch data for (optional)
+ *
+ * Note: Presets only define visual properties (bg, radius, gap, size, grid, margin, months, days, scale, username)
+ * and do not include color or theme settings.
+ *
+ * @param request - Next.js request object
+ * @param params - Route parameters containing username
+ * @returns Response with SVG or PNG chart or error JSON
+ */
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ username: string }> }
@@ -85,29 +100,51 @@ export async function GET(
     const { username } = await params;
     const searchParams = request.nextUrl.searchParams;
 
-    const year = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined;
+    // Validate username
+    if (!username || username.trim().length === 0) {
+        return NextResponse.json(
+            { error: 'Invalid username', message: 'Username parameter is required and cannot be empty' },
+            { status: 400 }
+        );
+    }
+
+    const year = parseNumericParam(searchParams.get('year'), undefined, 2008, new Date().getFullYear());
     const preset = searchParams.get('preset') as PresetKey | null;
 
-    // Get preset configuration or use individual parameters
-    const presetConfig = preset && PRESETS[preset] ? PRESETS[preset] : null;
+    // Validate preset
+    if (preset && !PRESETS[preset]) {
+        return NextResponse.json(
+            { error: 'Invalid preset', message: `Preset '${preset}' not found. Available presets: ${Object.keys(PRESETS).join(', ')}` },
+            { status: 400 }
+        );
+    }
 
-    const theme = (searchParams.get('theme') as 'github' | 'github-dark' | 'classic' | 'modern' | 'nord' | 'solarized' | 'sunset' | 'ocean' | 'dracula' | 'monokai' | 'one-dark' | 'material-dark' | 'tokyo-night' | 'gruvbox' | 'catppuccin') || 'github';
+    // Get preset configuration or use individual parameters
+    const presetConfig: PresetConfig | null = preset ? PRESETS[preset] : null;
+
+    // Parse and validate parameters
+    const themeParam = searchParams.get('theme');
+    const theme: Theme = SUPPORTED_THEMES.includes(themeParam as Theme) ? (themeParam as Theme) : 'github';
+
     const color = searchParams.get('color') || undefined;
-    const format = (searchParams.get('format') || 'svg') as 'svg' | 'png';
+    const format = (searchParams.get('format') === 'png' ? 'png' : 'svg') as Format;
+
     const bgParam = searchParams.get('bg');
-    const bg = bgParam === null ? (presetConfig?.bg ?? true) : bgParam === 'true';
-    const radius = searchParams.get('radius') ? parseInt(searchParams.get('radius')!) : presetConfig?.radius;
-    const gap = searchParams.get('gap') ? parseInt(searchParams.get('gap')!) : presetConfig?.gap;
-    const size = searchParams.get('size') ? parseInt(searchParams.get('size')!) : undefined;
-    const onlyGrid = searchParams.get('grid') ? searchParams.get('grid') === 'true' : (presetConfig?.onlyGrid ?? false);
-    const margin = searchParams.get('margin') ? parseInt(searchParams.get('margin')!) : presetConfig?.margin;
-    const showMonths = searchParams.get('months') ? searchParams.get('months') === 'true' : (presetConfig?.showMonths ?? false);
-    const showDays = searchParams.get('days') ? searchParams.get('days') === 'true' : (presetConfig?.showDays ?? false);
-    const showFooter = searchParams.get('footer') ? searchParams.get('footer') === 'true' : (presetConfig?.showFooter ?? true);
+    const bg = bgParam === null ? (presetConfig?.bg ?? true) : parseBooleanParam(bgParam, true);
+
+    const radius = parseNumericParam(searchParams.get('radius'), presetConfig?.radius, 0, 10);
+    const gap = parseNumericParam(searchParams.get('gap'), presetConfig?.gap, 0, 5);
+    const size = parseNumericParam(searchParams.get('size'), presetConfig?.size, 1, 20);
+    const onlyGrid = parseBooleanParam(searchParams.get('grid'), presetConfig?.grid ?? false);
+    const margin = parseNumericParam(searchParams.get('margin'), presetConfig?.margin, 0, 100);
+    const showMonths = parseBooleanParam(searchParams.get('months'), presetConfig?.months ?? false);
+    const showDays = parseBooleanParam(searchParams.get('days'), presetConfig?.days ?? false);
+    const showScale = parseBooleanParam(searchParams.get('scale'), presetConfig?.scale ?? true);
+    const showUsername = parseBooleanParam(searchParams.get('username'), presetConfig?.username ?? true);
 
     try {
         const data = await fetchContributions(username, year);
-        const result = await renderChart(data, {
+        const config: ChartConfig = {
             username,
             theme,
             color,
@@ -120,8 +157,11 @@ export async function GET(
             margin,
             showMonths,
             showDays,
-            showFooter,
-        });
+            showScale,
+            showUsername,
+        };
+
+        const result = await renderChart(data, config);
 
         if (format === 'png') {
             const buffer = result as Buffer;
@@ -144,10 +184,28 @@ export async function GET(
         console.error('Error generating chart:', error);
 
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        const isNotFound = errorMessage.includes('not found');
+        const isNotFound = errorMessage.toLowerCase().includes('not found') || errorMessage.toLowerCase().includes('404');
+        const isRateLimit = errorMessage.toLowerCase().includes('rate limit') || errorMessage.toLowerCase().includes('403');
+
+        let status = 500;
+        let errorType = 'Internal Server Error';
+
+        if (isNotFound) {
+            status = 404;
+            errorType = 'User Not Found';
+        } else if (isRateLimit) {
+            status = 429;
+            errorType = 'Rate Limit Exceeded';
+        }
+
         return NextResponse.json(
-            { error: isNotFound ? 'User Not Found' : 'Failed to generate chart', message: errorMessage },
-            { status: isNotFound ? 404 : 500 }
+            {
+                error: errorType,
+                message: errorMessage,
+                username,
+                timestamp: new Date().toISOString()
+            },
+            { status }
         );
     }
 }

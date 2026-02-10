@@ -20,7 +20,8 @@ const PRESETS = {
     gap: 1,
     showMonths: false,
     showDays: false,
-    showFooter: false,
+    showScale: false,
+    showUsername: false,
   },
   compact: {
     name: "Compact",
@@ -32,7 +33,8 @@ const PRESETS = {
     gap: 1,
     showMonths: false,
     showDays: false,
-    showFooter: false,
+    showScale: false,
+    showUsername: false,
   },
   classic: {
     name: "Classic",
@@ -44,7 +46,8 @@ const PRESETS = {
     gap: 2,
     showMonths: true,
     showDays: false,
-    showFooter: true,
+    showScale: true,
+    showUsername: true,
   },
   modern: {
     name: "Modern",
@@ -56,7 +59,8 @@ const PRESETS = {
     gap: 2,
     showMonths: false,
     showDays: true,
-    showFooter: true,
+    showScale: true,
+    showUsername: true,
   },
   full: {
     name: "Full",
@@ -68,7 +72,8 @@ const PRESETS = {
     gap: 2,
     showMonths: true,
     showDays: true,
-    showFooter: true,
+    showScale: true,
+    showUsername: true,
   },
   dark: {
     name: "Dark",
@@ -80,7 +85,8 @@ const PRESETS = {
     gap: 2,
     showMonths: true,
     showDays: false,
-    showFooter: true,
+    showScale: true,
+    showUsername: true,
   },
   coder: {
     name: "Coder",
@@ -92,7 +98,8 @@ const PRESETS = {
     gap: 2,
     showMonths: true,
     showDays: false,
-    showFooter: true,
+    showScale: true,
+    showUsername: true,
   },
 } as const;
 
@@ -106,7 +113,8 @@ export default function Page() {
   const [onlyGrid, setOnlyGrid] = useState(false)
   const [showMonths, setShowMonths] = useState(false)
   const [showDays, setShowDays] = useState(false)
-  const [showFooter, setShowFooter] = useState(true)
+  const [showScale, setShowScale] = useState(true)
+  const [showUsername, setShowUsername] = useState(true)
   const [margin, setMargin] = useState([20])
   const [radius, setRadius] = useState([2])
   const [gap, setGap] = useState([2])
@@ -137,7 +145,8 @@ export default function Page() {
     setColor("") // No custom color for presets
     setShowMonths(preset.showMonths)
     setShowDays(preset.showDays)
-    setShowFooter(preset.showFooter)
+    setShowScale(preset.showScale)
+    setShowUsername(preset.showUsername)
     setSelectedPreset(presetKey)
   }
 
@@ -154,13 +163,14 @@ export default function Page() {
         color === "" && // Presets don't use custom color
         showMonths === preset.showMonths &&
         showDays === preset.showDays &&
-        showFooter === preset.showFooter
+        showScale === preset.showScale &&
+        showUsername === preset.showUsername
       ) {
         return key as PresetKey
       }
     }
     return "custom" as const
-  }, [bg, onlyGrid, margin, radius, gap, size, color, showMonths, showDays, showFooter])
+  }, [bg, onlyGrid, margin, radius, gap, size, color, showMonths, showDays, showScale, showUsername])
 
   // Update selectedPreset when settings change
   useEffect(() => {
@@ -185,7 +195,8 @@ export default function Page() {
       grid: onlyGrid.toString(),
       months: showMonths.toString(),
       days: showDays.toString(),
-      footer: showFooter.toString(),
+      scale: showScale.toString(),
+      username: showUsername.toString(),
       margin: margin[0].toString(),
       radius: radius[0].toString(),
       gap: gap[0].toString(),
@@ -193,7 +204,7 @@ export default function Page() {
       ...(color && { color }),
     })
     return `/api/chart/${username}?${params.toString()}`
-  }, [username, theme, format, bg, onlyGrid, showMonths, showDays, showFooter, margin, radius, gap, size, color, selectedPreset])
+  }, [username, theme, format, bg, onlyGrid, showMonths, showDays, showScale, showUsername, margin, radius, gap, size, color, selectedPreset])
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -383,8 +394,12 @@ export default function Page() {
                   <Label htmlFor="days">Show Days</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Switch id="footer" checked={showFooter} onCheckedChange={setShowFooter} />
-                  <Label htmlFor="footer">Show Footer</Label>
+                  <Switch id="scale" checked={showScale} onCheckedChange={setShowScale} />
+                  <Label htmlFor="scale">Show Scale</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch id="username" checked={showUsername} onCheckedChange={setShowUsername} />
+                  <Label htmlFor="username">Show Username</Label>
                 </div>
               </div>
             </div>
