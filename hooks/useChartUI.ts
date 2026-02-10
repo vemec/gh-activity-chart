@@ -142,7 +142,11 @@ export function useChartUI() {
     setGap([preset.gap])
     setSize([preset.size || 10])
     setColor("") // No custom color for presets
-    // Note: showMonths, showDays, showScale, showUsername will be handled by the useEffect
+    // Set the boolean values directly from preset
+    setShowMonths(preset.months)
+    setShowDays(preset.days)
+    setShowScale(preset.scale)
+    setShowUsername(preset.username)
     setSelectedPreset(presetKey)
   }
 

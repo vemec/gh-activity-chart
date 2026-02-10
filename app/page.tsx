@@ -57,7 +57,9 @@ export default function Page() {
                   <SelectContent>
                     {Object.keys(THEMES).map((themeKey) => (
                       <SelectItem key={themeKey} value={themeKey}>
-                        {themeKey.charAt(0).toUpperCase() + themeKey.slice(1).replace('-', ' ')}
+                        {themeKey.split('-').map(word =>
+                          word.charAt(0).toUpperCase() + word.slice(1)
+                        ).join(' ')}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -252,6 +254,7 @@ export default function Page() {
                 width={chartDimensions.width}
                 height={chartDimensions.height}
                 className="border rounded-lg shadow-lg max-w-full h-auto"
+                unoptimized
                 onError={(e) => {
                   e.currentTarget.src = '/api/placeholder.svg'
                 }}
