@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Hydration mismatch error**: Fixed server/client rendering discrepancy when displaying API URLs by using useState instead of window.location.origin checks
 
 ### Changed
+- **Page title updated**: Changed from "Create Next App" to "GitHub Activity Chart" for better branding
 - **Complete UI translation**: Application fully translated from Spanish to English for better accessibility
 - All user-facing text, labels, descriptions, and preset names now in English
 - Improved international usability and maintainability
