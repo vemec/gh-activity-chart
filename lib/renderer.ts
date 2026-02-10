@@ -1,12 +1,12 @@
 import { ContributionData, ContributionDay } from './github';
-import React from 'react';
+import { THEMES, generateShades, type ThemeName } from './themes';
 import sharp from 'sharp';
 
 // Font loading utilities - removed, using system fonts for SVG
 
 export interface RenderOptions {
   username: string;
-  theme?: 'github' | 'github-dark' | 'classic' | 'modern' | 'nord' | 'solarized' | 'sunset' | 'ocean' | 'dracula' | 'monokai' | 'one-dark' | 'material-dark' | 'tokyo-night' | 'gruvbox' | 'catppuccin';
+  theme?: ThemeName;
   color?: string;
   format?: 'svg' | 'png';
   bg?: boolean;
@@ -20,25 +20,6 @@ export interface RenderOptions {
   showScale?: boolean;
   showUsername?: boolean;
 }
-
-const THEMES = {
-  github: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'],
-  'github-dark': ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'],
-  classic: ['#eeeeee', '#c6e48b', '#7bc96f', '#239a3b', '#196127'],
-  modern: ['#f0f0f0', '#b4daff', '#69b4ff', '#007bff', '#0056b3'],
-  nord: ['#eceff4', '#a3be8c', '#8fbcbb', '#81a1c1', '#5e81ac'],
-  solarized: ['#eee8d5', '#93a1a1', '#859900', '#b58900', '#cb4b16'],
-  sunset: ['#fee2e2', '#fecaca', '#f87171', '#dc2626', '#991b1b'],
-  ocean: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#0284c7', '#075985'],
-  // Classic programmer themes
-  dracula: ['#282a36', '#50fa7b', '#6272a4', '#bd93f9', '#ff79c6'],
-  monokai: ['#272822', '#a6e22e', '#f92672', '#ae81ff', '#fd971f'],
-  'one-dark': ['#282c34', '#98c379', '#e06c75', '#c678dd', '#61afef'],
-  'material-dark': ['#263238', '#c3e88d', '#ff5370', '#c792ea', '#82aaff'],
-  'tokyo-night': ['#1a1b26', '#9ece6a', '#f7768e', '#bb9af7', '#7dcfff'],
-  gruvbox: ['#fbf1c7', '#98971a', '#cc241d', '#b16286', '#458588'],
-  catppuccin: ['#eff1f5', '#40a02b', '#d20f39', '#8839ef', '#1e66f5'],
-};
 
 export async function renderChart(data: ContributionData, options: RenderOptions): Promise<Buffer | string> {
   const {
@@ -57,7 +38,7 @@ export async function renderChart(data: ContributionData, options: RenderOptions
     showUsername = true
   } = options;
 
-  let colors = THEMES[theme as keyof typeof THEMES] || THEMES.github;
+  let colors: readonly string[] = THEMES[theme as keyof typeof THEMES] || THEMES.github;
   if (color) {
     colors = generateShades(color);
   }
@@ -111,11 +92,10 @@ export async function renderChart(data: ContributionData, options: RenderOptions
   const width = displayWeeks.length * (cellSize + gap) + (margin * 2) + labelSpaceLeft;
   const scaleSpace = (!onlyGrid && showScale) ? 20 : 0;
   const usernameSpace = (!onlyGrid && showUsername) ? 20 : 0;
-  const titleSpace = !onlyGrid ? 25 : 0;
   const monthsSpace = showMonths ? 20 : 0;
 
-  // Height calculation: 7 rows of cells + 6 gaps between them + top/bottom margins + title + scale + username + months
-  const height = 7 * cellSize + 6 * gap + (margin * 2) + titleSpace + scaleSpace + usernameSpace + monthsSpace;
+  // Height calculation: 7 rows of cells + 6 gaps between them + top/bottom margins + scale + username + months
+  const height = 7 * cellSize + 6 * gap + (margin * 2) + scaleSpace + usernameSpace + monthsSpace;
 
   console.log(`[Renderer] showMonths: ${showMonths}`);
 
@@ -155,7 +135,7 @@ export async function renderChart(data: ContributionData, options: RenderOptions
     const textColor = theme === 'github-dark' ? '#c9d1d9' : '#24292e';
     // Show only 3 days spaced by one day: Mon, Wed, Fri
     const daysToShow = [1, 3, 5]; // Monday, Wednesday, Friday
-    daysToShow.forEach((dayIndex, displayIndex) => {
+    daysToShow.forEach((dayIndex) => {
       const y = margin + labelSpaceTop + dayIndex * (cellSize + gap) + cellSize / 2 + 3; // Center vertically in cell
       svgContent += `<text x="${margin + 25}" y="${y}" font-family="Figtree" font-size="9" font-weight="400" fill="${textColor}" opacity="0.6" text-anchor="end">${dayNames[dayIndex]}</text>`;
     });
@@ -223,29 +203,4 @@ export async function renderChart(data: ContributionData, options: RenderOptions
   }
 
   return svg;
-}
-
-function generateShades(baseColor: string): string[] {
-  const color = baseColor.startsWith('#') ? baseColor : `#${baseColor}`;
-
-  // Parse the hex color
-  const r = parseInt(color.slice(1, 3), 16);
-  const g = parseInt(color.slice(3, 5), 16);
-  const b = parseInt(color.slice(5, 7), 16);
-
-  // Generate 5 shades from very light to the base color
-  const shades = [
-    // Level 0: Very light gray (almost white)
-    '#ebedf0',
-    // Level 1: Very light tint of the base color
-    `rgba(${r}, ${g}, ${b}, 0.15)`,
-    // Level 2: Light tint
-    `rgba(${r}, ${g}, ${b}, 0.3)`,
-    // Level 3: Medium tint
-    `rgba(${r}, ${g}, ${b}, 0.6)`,
-    // Level 4: Full base color
-    color,
-  ];
-
-  return shades;
 }

@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchContributions } from '@/lib/github';
 import { renderChart } from '@/lib/renderer';
-import { PRESETS, type PresetKey, type PresetConfig } from '@/lib/presets';
-
-// Supported themes for the chart
-const SUPPORTED_THEMES = [
-    'github', 'github-dark', 'classic', 'modern', 'nord', 'solarized',
-    'sunset', 'ocean', 'dracula', 'monokai', 'one-dark', 'material-dark',
-    'tokyo-night', 'gruvbox', 'catppuccin'
-] as const;
-
-type Theme = typeof SUPPORTED_THEMES[number];
+import { PRESETS, getPreset, type PresetKey, type PresetConfig } from '@/lib/presets';
+import { type ThemeName, THEMES } from '@/lib/themes';
 
 // Supported output formats
 type Format = 'svg' | 'png';
@@ -18,7 +10,7 @@ type Format = 'svg' | 'png';
 // Configuration interface for chart rendering
 interface ChartConfig {
     username: string;
-    theme: Theme;
+    theme: ThemeName;
     color?: string;
     format: Format;
     bg: boolean;
@@ -120,11 +112,11 @@ export async function GET(
     }
 
     // Get preset configuration or use individual parameters
-    const presetConfig: PresetConfig | null = preset ? PRESETS[preset] : null;
+    const presetConfig: PresetConfig | null = preset ? getPreset(preset) : null;
 
     // Parse and validate parameters
     const themeParam = searchParams.get('theme');
-    const theme: Theme = SUPPORTED_THEMES.includes(themeParam as Theme) ? (themeParam as Theme) : 'github';
+    const theme: ThemeName = Object.keys(THEMES).includes(themeParam as ThemeName) ? (themeParam as ThemeName) : 'github';
 
     const color = searchParams.get('color') || undefined;
     const format = (searchParams.get('format') === 'png' ? 'png' : 'svg') as Format;
