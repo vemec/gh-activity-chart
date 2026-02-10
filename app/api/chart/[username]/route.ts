@@ -98,11 +98,12 @@ export async function GET(
     const bg = bgParam === null ? (presetConfig?.bg ?? true) : bgParam === 'true';
     const radius = searchParams.get('radius') ? parseInt(searchParams.get('radius')!) : presetConfig?.radius;
     const gap = searchParams.get('gap') ? parseInt(searchParams.get('gap')!) : presetConfig?.gap;
-    const onlyGrid = searchParams.get('grid') === 'true' || (presetConfig?.onlyGrid ?? false);
+    const size = searchParams.get('size') ? parseInt(searchParams.get('size')!) : undefined;
+    const onlyGrid = searchParams.get('grid') ? searchParams.get('grid') === 'true' : (presetConfig?.onlyGrid ?? false);
     const margin = searchParams.get('margin') ? parseInt(searchParams.get('margin')!) : presetConfig?.margin;
-    const showMonths = searchParams.get('months') === 'true' || (presetConfig?.showMonths ?? true);
-    const showDays = searchParams.get('days') === 'true' || (presetConfig?.showDays ?? false);
-    const showFooter = searchParams.get('footer') !== 'false' && (presetConfig?.showFooter ?? true);
+    const showMonths = searchParams.get('months') ? searchParams.get('months') === 'true' : (presetConfig?.showMonths ?? false);
+    const showDays = searchParams.get('days') ? searchParams.get('days') === 'true' : (presetConfig?.showDays ?? false);
+    const showFooter = searchParams.get('footer') ? searchParams.get('footer') === 'true' : (presetConfig?.showFooter ?? true);
 
     try {
         const data = await fetchContributions(username, year);
@@ -114,6 +115,7 @@ export async function GET(
             bg,
             radius,
             gap,
+            size,
             onlyGrid,
             margin,
             showMonths,

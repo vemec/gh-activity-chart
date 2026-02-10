@@ -110,6 +110,8 @@ export default function Page() {
   const [margin, setMargin] = useState([20])
   const [radius, setRadius] = useState([2])
   const [gap, setGap] = useState([2])
+  const [size, setSize] = useState([10])
+  const [color, setColor] = useState("")
   const [selectedPreset, setSelectedPreset] = useState<PresetKey | "custom">("custom")
   const [origin, setOrigin] = useState("")
 
@@ -131,6 +133,8 @@ export default function Page() {
     setMargin([preset.margin])
     setRadius([preset.radius])
     setGap([preset.gap])
+    setSize([10]) // Default size for presets
+    setColor("") // No custom color for presets
     setShowMonths(preset.showMonths)
     setShowDays(preset.showDays)
     setShowFooter(preset.showFooter)
@@ -146,6 +150,8 @@ export default function Page() {
         margin[0] === preset.margin &&
         radius[0] === preset.radius &&
         gap[0] === preset.gap &&
+        size[0] === 10 && // Presets use default size
+        color === "" && // Presets don't use custom color
         showMonths === preset.showMonths &&
         showDays === preset.showDays &&
         showFooter === preset.showFooter
@@ -154,10 +160,10 @@ export default function Page() {
       }
     }
     return "custom" as const
-  }, [bg, onlyGrid, margin, radius, gap, showMonths, showDays, showFooter])
+  }, [bg, onlyGrid, margin, radius, gap, size, color, showMonths, showDays, showFooter])
 
   // Update selectedPreset when settings change
-  useMemo(() => {
+  useEffect(() => {
     setSelectedPreset(currentPreset)
   }, [currentPreset])
 
@@ -183,9 +189,11 @@ export default function Page() {
       margin: margin[0].toString(),
       radius: radius[0].toString(),
       gap: gap[0].toString(),
+      size: size[0].toString(),
+      ...(color && { color }),
     })
     return `/api/chart/${username}?${params.toString()}`
-  }, [username, theme, format, bg, onlyGrid, showMonths, showDays, showFooter, margin, radius, gap, selectedPreset])
+  }, [username, theme, format, bg, onlyGrid, showMonths, showDays, showFooter, margin, radius, gap, size, color, selectedPreset])
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -311,6 +319,49 @@ export default function Page() {
                   step={1}
                   className="w-full"
                 />
+              </div>
+
+              {/* Size Slider */}
+              <div className="space-y-2">
+                <Label>Cell Size: {size[0]}px</Label>
+                <Slider
+                  value={size}
+                  onValueChange={(value) => setSize(Array.isArray(value) ? value : [value])}
+                  max={20}
+                  min={6}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Custom Color */}
+              <div className="space-y-2">
+                <Label htmlFor="color">Custom Color</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="color"
+                    type="color"
+                    value={color ? (color.startsWith('#') ? color : `#${color}`) : '#000000'}
+                    onChange={(e) => setColor(e.target.value.slice(1))} // Remove # prefix
+                    className="w-16 h-10 p-1 border rounded"
+                  />
+                  <Input
+                    type="text"
+                    placeholder="e.g. ff6b6b"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value.replace('#', ''))}
+                    className="flex-1"
+                  />
+                  {color && (
+                    <button
+                      onClick={() => setColor('')}
+                      className="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500">Hex color without # (overrides theme)</p>
               </div>
 
               {/* Switches */}

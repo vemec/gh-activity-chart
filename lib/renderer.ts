@@ -1,7 +1,8 @@
-import satori from 'satori';
 import { ContributionData, ContributionDay } from './github';
 import React from 'react';
 import sharp from 'sharp';
+
+// Font loading utilities - removed, using system fonts for SVG
 
 export interface RenderOptions {
   username: string;
@@ -11,6 +12,7 @@ export interface RenderOptions {
   bg?: boolean;
   radius?: number; // 0 to 5
   gap?: number;    // 0 to 5
+  size?: number;   // cell size in pixels, default 10
   onlyGrid?: boolean;
   margin?: number; // 0 to 100
   showMonths?: boolean;
@@ -45,6 +47,7 @@ export async function renderChart(data: ContributionData, options: RenderOptions
     bg = true,
     radius = 2,
     gap = 2,
+    size = 10,
     onlyGrid = false,
     margin = 20,
     showMonths = false,
@@ -57,19 +60,33 @@ export async function renderChart(data: ContributionData, options: RenderOptions
     colors = generateShades(color);
   }
 
-  const cellSize = 10;
+  const cellSize = size;
   const labelSpaceLeft = showDays ? 30 : 0;
   const labelSpaceTop = showMonths ? 20 : 0;
 
-  // Build a continuous timeline of 53 weeks (371 days)
+  // Build a continuous timeline from today last year to today this year, aligned to weeks like GitHub
   const daysMap = new Map(data.days.map(d => [d.date, d]));
-  const latestDateStr = data.days.length > 0 ? data.days[data.days.length - 1].date : new Date().toISOString().split('T')[0];
-  const endDate = new Date(latestDateStr);
+  const today = new Date();
+  const endDate = new Date(today);
+  const startDate = new Date(today);
+  startDate.setFullYear(startDate.getFullYear() - 1);
+
+  // Find the Sunday of the week containing startDate
+  const startSunday = new Date(startDate);
+  startSunday.setDate(startDate.getDate() - startDate.getDay());
+
+  // Find the Saturday of the week containing endDate
+  const endSaturday = new Date(endDate);
+  endSaturday.setDate(endDate.getDate() + (6 - endDate.getDay()));
+
+  // Calculate total days between start Sunday and end Saturday
+  const timeDiff = endSaturday.getTime() - startSunday.getTime();
+  const totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // +1 to include end date
 
   const filledDays: ContributionDay[] = [];
-  for (let i = 370; i >= 0; i--) {
-    const d = new Date(endDate);
-    d.setDate(d.getDate() - i);
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(startSunday);
+    d.setDate(startSunday.getDate() + i);
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -87,130 +104,107 @@ export async function renderChart(data: ContributionData, options: RenderOptions
     }
   }
 
-  const displayWeeks = weeks; // Already limited to 53 weeks
+  const displayWeeks = weeks; // Weeks from last year to this year
   console.log(`[Renderer] Rendering chart for ${options.username}, format: ${options.format}, displayWeeks: ${displayWeeks.length}`);
   const width = displayWeeks.length * (cellSize + gap) + (margin * 2) + labelSpaceLeft;
   const footerSpace = (!onlyGrid && showFooter) ? 20 : 0;
   const titleSpace = !onlyGrid ? 25 : 0;
+  const monthsSpace = showMonths ? 20 : 0;
 
-  // Height calculation: 7 rows of cells + 6 gaps between them + top/bottom margins
-  const height = 7 * cellSize + 6 * gap + (margin * 2);
+  // Height calculation: 7 rows of cells + 6 gaps between them + top/bottom margins + title + footer + months
+  const height = 7 * cellSize + 6 * gap + (margin * 2) + titleSpace + footerSpace + monthsSpace;
 
-  const monthLabels: React.ReactElement[] = [];
-  const seenMonths = new Set<string>();
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  console.log(`[Renderer] showMonths: ${showMonths}`);
 
-  displayWeeks.forEach((week, i) => {
-    const dateStr = week[0].date;
-    const yearMonth = dateStr.substring(0, 7); // e.g. "2026-02"
-    if (!seenMonths.has(yearMonth)) {
-      const mIdx = parseInt(dateStr.split('-')[1]) - 1;
-      monthLabels.push(
-        React.createElement('span', {
-          key: yearMonth,
-          style: {
-            position: 'absolute',
-            left: `${i * (cellSize + gap)}px`,
-            whiteSpace: 'nowrap'
-          }
-        }, monthNames[mIdx])
-      );
-      seenMonths.add(yearMonth);
-    }
+  // Load fonts (not needed for manual SVG)
+  console.log(`[Renderer] Building SVG manually`);
+
+  // Build SVG manually
+  let svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`;
+
+  // Add background rectangle if bg is enabled
+  if (bg) {
+    svgContent += `<rect width="${width}" height="${height}" fill="white"/>`;
+  }
+
+  // Add months text if enabled
+  if (showMonths) {
+    let xOffset = margin + labelSpaceLeft;
+    const seenMonths = new Set<string>();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    displayWeeks.forEach((week, i) => {
+      const dateStr = week[0].date;
+      const yearMonth = dateStr.substring(0, 7);
+      if (!seenMonths.has(yearMonth)) {
+        const mIdx = parseInt(dateStr.split('-')[1]) - 1;
+        const textColor = theme === 'github-dark' ? '#c9d1d9' : '#24292e';
+        svgContent += `<text x="${xOffset}" y="${margin + 15}" font-family="Figtree" font-size="10" font-weight="400" fill="${textColor}" opacity="0.8">${monthNames[mIdx]}</text>`;
+        seenMonths.add(yearMonth);
+      }
+      xOffset += cellSize + gap;
+    });
+  }
+
+  // Add day labels if enabled
+  if (showDays) {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const textColor = theme === 'github-dark' ? '#c9d1d9' : '#24292e';
+    // Show only 3 days spaced by one day: Mon, Wed, Fri
+    const daysToShow = [1, 3, 5]; // Monday, Wednesday, Friday
+    daysToShow.forEach((dayIndex, displayIndex) => {
+      const y = margin + labelSpaceTop + dayIndex * (cellSize + gap) + cellSize / 2 + 3; // Center vertically in cell
+      svgContent += `<text x="${margin + 25}" y="${y}" font-family="Figtree" font-size="9" font-weight="400" fill="${textColor}" opacity="0.6" text-anchor="end">${dayNames[dayIndex]}</text>`;
+    });
+  }
+
+  // Add grid
+  const gridStartY = margin + labelSpaceTop;
+  displayWeeks.forEach((week, wi) => {
+    const weekStartX = margin + labelSpaceLeft + wi * (cellSize + gap);
+    week.forEach((day, di) => {
+      const x = weekStartX;
+      const y = gridStartY + di * (cellSize + gap);
+      const fillColor = colors[day.level];
+      svgContent += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" fill="${fillColor}" rx="${radius}" ry="${radius}"/>`;
+    });
   });
 
-  const svg = await satori(
-    React.createElement(
-      'div',
-      {
-        style: {
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: bg ? (theme === 'github-dark' ? '#0d1117' : '#ffffff') : 'transparent',
-          padding: `${margin}px`,
-          width: '100%',
-          height: '100%',
-          color: theme === 'github-dark' ? '#c9d1d9' : '#24292e',
-        },
-      },
-      [
-        React.createElement(
-          'div',
-          { key: 'main-container', style: { display: 'flex', flexDirection: 'column' } },
-          [
-            // showMonths && React.createElement(
-            //   'div',
-            //   {
-            //     key: 'months-row',
-            //     style: {
-            //       position: 'relative',
-            //       marginLeft: `${labelSpaceLeft}px`,
-            //       height: '15px',
-            //       fontSize: '9px',
-            //       marginBottom: '4px',
-            //       opacity: 0.6,
-            //     }
-            //   },
-            //   monthLabels
-            // ),
-            React.createElement(
-              'div',
-              { key: 'grid-row', style: { display: 'flex' } },
-              [
-                // showDays && React.createElement(
-                //   'div',
-                //   { key: 'days', style: { display: 'flex', flexDirection: 'column', width: `${labelSpaceLeft}px`, fontSize: '9px', justifyContent: 'space-around', paddingRight: '4px', opacity: 0.6 } },
-                //   ['Mon', 'Wed', 'Fri'].map((day, i) => React.createElement('span', { key: i, style: { height: `${cellSize}px`, display: 'flex', alignItems: 'center' } }, day))
-                // ),
-                React.createElement(
-                  'div',
-                  { key: 'grid', style: { display: 'flex', gap: `${gap}px` } },
-                  displayWeeks.map((week, wi) =>
-                    React.createElement(
-                      'div',
-                      { key: wi, style: { display: 'flex', flexDirection: 'column', gap: `${gap}px`, flexShrink: 0 } },
-                      week.map((day, di) =>
-                        React.createElement('div', {
-                          key: di,
-                          style: {
-                            width: `${cellSize}px`,
-                            height: `${cellSize}px`,
-                            backgroundColor: colors[day.level],
-                            borderRadius: `${radius}px`,
-                          },
-                        })
-                      )
-                    )
-                  )
-                )
-              ]
-            )
-          ]
-        ),
-        // !onlyGrid && React.createElement('div', { key: 'title', style: { marginTop: '15px', fontSize: '13px', fontWeight: 'bold', display: 'flex', marginLeft: `${labelSpaceLeft}px` } }, `@${options.username}'s contributions`),
-        // !onlyGrid && showFooter && React.createElement(
-        //   'div',
-        //   {
-        //     key: 'footer',
-        //     style: { marginTop: '5px', marginLeft: `${labelSpaceLeft}px`, display: 'flex', justifyContent: 'space-between', fontSize: '10px', opacity: 0.7 }
-        //   },
-        //   [
-        //     React.createElement('span', { key: 'total', style: { display: 'flex' } }, `${data.total} contributions in this period`),
-        //     React.createElement('div', { key: 'legend', style: { display: 'flex', gap: '2px', alignItems: 'center' } }, [
-        //       React.createElement('span', { key: 'less', style: { marginRight: '4px', display: 'flex' } }, 'Less'),
-        //       ...colors.map((c, i) => React.createElement('div', { key: i, style: { width: '8px', height: '8px', backgroundColor: c, borderRadius: '1px', display: 'flex' } })),
-        //       React.createElement('span', { key: 'more', style: { marginLeft: '4px', display: 'flex' } }, 'More'),
-        //     ])
-        //   ]
-        // )
-      ].filter(Boolean) as any
-    ),
-    {
-      width,
-      height,
-      fonts: [],
-    }
-  );
+  // Add footer with "Less | More" and color scale
+  if (showFooter) {
+    const footerY = height - margin - 27;
+    const textColor = theme === 'github-dark' ? '#c9d1d9' : '#24292e';
+
+    // Calculate footer width: "Less" + 5 squares + gaps + "More"
+    const lessTextWidth = 25; // Approximate width of "Less"
+    const scaleSize = cellSize - 2;
+    const scaleGap = gap;
+    const scaleWidth = colors.length * (scaleSize + scaleGap) - scaleGap; // 5 * (cellSize-2) + 4 * gap
+    const moreTextWidth = 30; // Approximate width of "More"
+    const footerWidth = lessTextWidth + scaleWidth + moreTextWidth + 20; // Add some padding
+
+    // Position footer aligned to the right edge of the chart area
+    const chartAreaEndX = margin + labelSpaceLeft + (displayWeeks.length - 1) * (cellSize + gap) + cellSize;
+    const footerStartX = chartAreaEndX - footerWidth;
+
+    // "Less" text
+    svgContent += `<text x="${footerStartX}" y="${footerY}" font-family="Figtree" font-size="9" font-weight="400" fill="${textColor}" opacity="0.6">Less</text>`;
+
+    // Color scale squares
+    const scaleStartX = footerStartX + lessTextWidth + 5;
+    colors.forEach((color, i) => {
+      const x = scaleStartX + i * (scaleSize + scaleGap);
+      svgContent += `<rect x="${x}" y="${footerY - scaleSize}" width="${scaleSize}" height="${scaleSize}" fill="${color}" rx="${radius}" ry="${radius}"/>`;
+    });
+
+    // "More" text
+    const moreX = scaleStartX + colors.length * (scaleSize + scaleGap) - scaleGap + 5;
+    svgContent += `<text x="${moreX}" y="${footerY}" font-family="Figtree" font-size="9" font-weight="400" fill="${textColor}" opacity="0.6">More</text>`;
+  }
+
+  svgContent += '</svg>';
+
+  const svg = svgContent;
 
   if (format === 'png') {
     return await sharp(Buffer.from(svg)).png().toBuffer();
@@ -221,12 +215,25 @@ export async function renderChart(data: ContributionData, options: RenderOptions
 
 function generateShades(baseColor: string): string[] {
   const color = baseColor.startsWith('#') ? baseColor : `#${baseColor}`;
-  // Simple approximation of shades
-  return [
+
+  // Parse the hex color
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+
+  // Generate 5 shades from very light to the base color
+  const shades = [
+    // Level 0: Very light gray (almost white)
     '#ebedf0',
-    color + '33',
-    color + '66',
-    color + 'aa',
+    // Level 1: Very light tint of the base color
+    `rgba(${r}, ${g}, ${b}, 0.15)`,
+    // Level 2: Light tint
+    `rgba(${r}, ${g}, ${b}, 0.3)`,
+    // Level 3: Medium tint
+    `rgba(${r}, ${g}, ${b}, 0.6)`,
+    // Level 4: Full base color
     color,
   ];
+
+  return shades;
 }
