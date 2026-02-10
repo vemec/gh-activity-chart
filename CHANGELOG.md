@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Catppuccin: Modern pastel theme
 
 ### Fixed
+- **UI layout stability**: Fixed switch positioning issue where toggling background caused "Show Days" switch to move down by adding `items-start` alignment to the configuration grid
 - **Vercel deployment issue**: Removed debug file write operation that caused EROFS errors in production
 - Height calculation corrected to remove extra white margin at bottom of generated images
 - Proper spacing calculation: 7 rows × cellSize + 6 gaps + margins
