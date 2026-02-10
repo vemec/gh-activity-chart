@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Next.js Image configuration**: Added `images.localPatterns` to allow API routes with query strings, fixing local image loading issues
 - **Theme toggle functionality**: Added dark/light theme support with toggle button in footer using next-themes
 - **Alpha transparency for empty cells**: When background is disabled (`bg=false`), empty contribution cells now have 50% opacity for better visibility on any background
+- **Cell transparency hierarchy**: When `bg=false`, empty cells have 85% opacity while contribution cells have 55% opacity for better visual distinction
 
 ### Fixed
 - **Hydration error**: Resolved SSR/client mismatch in theme provider by adding `suppressHydrationWarning` to html element
