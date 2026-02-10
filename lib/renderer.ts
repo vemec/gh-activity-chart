@@ -150,19 +150,23 @@ export async function renderChart(data: ContributionData, options: RenderOptions
       const y = gridStartY + di * (cellSize + gap);
       let fillColor = colors[day.level];
 
-      // When bg is false, apply 50% alpha to empty cells (level 0) for better visibility on any background
-      if (!bg && day.level === 0) {
-        // Convert hex color to rgba with 50% alpha
+      // When bg is false, apply transparency to cells for better visibility on any background
+      if (!bg) {
         if (fillColor.startsWith('#')) {
           const r = parseInt(fillColor.slice(1, 3), 16);
           const g = parseInt(fillColor.slice(3, 5), 16);
           const b = parseInt(fillColor.slice(5, 7), 16);
-          fillColor = `rgba(${r}, ${g}, ${b}, 0.5)`;
+
+          // Empty cells (level 0): 85% opacity (15% more visible)
+          // Other cells (level 1-4): 55% opacity (45% transparency)
+          const alpha = day.level === 0 ? 0.85 : 0.55;
+          fillColor = `rgba(${r}, ${g}, ${b}, ${alpha})`;
         } else if (fillColor.startsWith('rgba(')) {
           // If already rgba, modify the alpha
           const rgbaMatch = fillColor.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
           if (rgbaMatch) {
-            fillColor = `rgba(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}, 0.5)`;
+            const alpha = day.level === 0 ? 0.85 : 0.55;
+            fillColor = `rgba(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}, ${alpha})`;
           }
         }
       }
