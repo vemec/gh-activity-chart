@@ -148,7 +148,25 @@ export async function renderChart(data: ContributionData, options: RenderOptions
     week.forEach((day, di) => {
       const x = weekStartX;
       const y = gridStartY + di * (cellSize + gap);
-      const fillColor = colors[day.level];
+      let fillColor = colors[day.level];
+
+      // When bg is false, apply 50% alpha to empty cells (level 0) for better visibility on any background
+      if (!bg && day.level === 0) {
+        // Convert hex color to rgba with 50% alpha
+        if (fillColor.startsWith('#')) {
+          const r = parseInt(fillColor.slice(1, 3), 16);
+          const g = parseInt(fillColor.slice(3, 5), 16);
+          const b = parseInt(fillColor.slice(5, 7), 16);
+          fillColor = `rgba(${r}, ${g}, ${b}, 0.5)`;
+        } else if (fillColor.startsWith('rgba(')) {
+          // If already rgba, modify the alpha
+          const rgbaMatch = fillColor.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+          if (rgbaMatch) {
+            fillColor = `rgba(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}, 0.5)`;
+          }
+        }
+      }
+
       svgContent += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" fill="${fillColor}" rx="${radius}" ry="${radius}"/>`;
     });
   });
