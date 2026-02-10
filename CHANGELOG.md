@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Preset unification**: Consolidated PRESETS and PRESETS_UI into single source of truth in `lib/presets.ts`
 - **Next.js Image configuration**: Added `images.localPatterns` to allow API routes with query strings, fixing local image loading issues
 - **Theme toggle functionality**: Added dark/light theme support with toggle button in footer using next-themes
+- **Alpha transparency for empty cells**: When background is disabled (`bg=false`), empty contribution cells now have 50% opacity for better visibility on any background
 
 ### Fixed
 - **Hydration error**: Resolved SSR/client mismatch in theme provider by adding `suppressHydrationWarning` to html element
