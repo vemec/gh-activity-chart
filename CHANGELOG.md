@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Next.js Image configuration**: Added `images.localPatterns` to allow API routes with query strings, fixing local image loading issues
 - **Theme toggle functionality**: Added dark/light theme support with toggle button in footer using next-themes
 
+### Fixed
+- **Hydration error**: Resolved SSR/client mismatch in theme provider by adding `suppressHydrationWarning` to html element
+
 ### Changed
 - **UI component refactoring**: Main page component reduced from 350+ lines to ~250 lines using custom hooks
 - **State management improvement**: Moved from inline state logic to organized hook-based architecture
