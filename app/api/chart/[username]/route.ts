@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fetchContributions } from '@/lib/github';
 import { renderChart } from '@/lib/renderer';
 import { PRESETS, getPreset, type PresetKey, type PresetConfig } from '@/lib/presets';
-import { type ThemeName, THEMES } from '@/lib/themes';
+import { type ThemeName, type ThemeMode, THEMES } from '@/lib/themes';
 
 // Supported output formats
 type Format = 'svg' | 'png';
@@ -11,6 +11,7 @@ type Format = 'svg' | 'png';
 interface ChartConfig {
     username: string;
     theme: ThemeName;
+    mode: ThemeMode;
     color?: string;
     format: Format;
     bg: boolean;
@@ -63,7 +64,8 @@ function parseBooleanParam(param: string | null, defaultValue: boolean): boolean
  *
  * Query Parameters:
  * - preset: Predefined visual configuration (see /lib/presets.ts for available options)
- * - theme: Color theme (github, github-dark, classic, modern, nord, etc.)
+ * - theme: Color theme (github, classic, modern, nord, etc.)
+ * - mode: Theme mode (light/dark) - transforms theme colors accordingly
  * - color: Custom hex color (e.g., ff6b6b or #ff6b6b) - overrides theme
  * - format: Output format (svg or png)
  * - bg: Show background (true/false)
@@ -118,6 +120,9 @@ export async function GET(
     const themeParam = searchParams.get('theme');
     const theme: ThemeName = Object.keys(THEMES).includes(themeParam as ThemeName) ? (themeParam as ThemeName) : 'github';
 
+    const modeParam = searchParams.get('mode');
+    const mode: ThemeMode = (modeParam === 'dark') ? 'dark' : 'light';
+
     const color = searchParams.get('color') || undefined;
     const format = (searchParams.get('format') === 'png' ? 'png' : 'svg') as Format;
 
@@ -139,6 +144,7 @@ export async function GET(
         const config: ChartConfig = {
             username,
             theme,
+            mode,
             color,
             format,
             bg,

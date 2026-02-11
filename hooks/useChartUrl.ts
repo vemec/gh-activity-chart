@@ -11,6 +11,7 @@ export function useChartUrl(params: ChartParams): string {
   const {
     username,
     theme,
+    mode,
     format,
     bg,
     onlyGrid,
@@ -32,6 +33,7 @@ export function useChartUrl(params: ChartParams): string {
       const urlParams = new URLSearchParams({
         preset: selectedPreset,
         theme,
+        mode,
         format,
       })
       return `/api/chart/${username}?${urlParams.toString()}`
@@ -41,6 +43,7 @@ export function useChartUrl(params: ChartParams): string {
     const urlParams = new URLSearchParams({
       format,
       theme,
+      mode,
       bg: bg.toString(),
       grid: onlyGrid.toString(),
       months: showMonths.toString(),
@@ -57,6 +60,7 @@ export function useChartUrl(params: ChartParams): string {
   }, [
     username,
     theme,
+    mode,
     format,
     bg,
     onlyGrid,

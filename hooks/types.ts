@@ -1,9 +1,10 @@
 import { type PresetKey } from "../lib/presets"
-import { type ThemeName } from "../lib/themes"
+import { type ThemeName, type ThemeMode } from "../lib/themes"
 
 export interface ChartParams {
   username: string
   theme: ThemeName
+  mode: ThemeMode
   format: string
   bg: boolean
   onlyGrid: boolean
@@ -17,20 +18,4 @@ export interface ChartParams {
   size: number[]
   color: string
   selectedPreset: PresetKey | "custom"
-}
-
-export interface ChartDimensionsParams {
-  size: number[]
-  gap: number[]
-  margin: number[]
-  showDays: boolean
-  onlyGrid: boolean
-  showScale: boolean
-  showUsername: boolean
-  showMonths: boolean
-}
-
-export interface ChartDimensions {
-  width: number
-  height: number
 }

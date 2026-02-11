@@ -21,8 +21,12 @@ export async function fetchContributions(username: string, year?: number): Promi
     }
     return await fetchWithScraping(username, year);
   } catch (error: unknown) {
-    if (error && typeof error === 'object' && 'response' in error && (error as any).response?.status === 404) {
-      throw new Error(`User "${username}" not found`);
+    // Check if it's an HTTP error with status 404
+    if (error && typeof error === 'object' && 'response' in error) {
+      const httpError = error as { response?: { status?: number } };
+      if (httpError.response?.status === 404) {
+        throw new Error(`User "${username}" not found`);
+      }
     }
     throw error;
   }

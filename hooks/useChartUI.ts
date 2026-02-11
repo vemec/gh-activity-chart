@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect } from "react"
 import { PRESETS, type PresetKey } from "../lib/presets"
-import { type ThemeName } from "../lib/themes"
-import { type ChartParams, type ChartDimensionsParams } from "./types"
+import { type ThemeName, type ThemeMode } from "../lib/themes"
+import { type ChartParams } from "./types"
 
 export interface ChartUIState {
   // Basic settings
   username: string
   theme: ThemeName
+  mode: ThemeMode
   format: string
 
   // Visual settings
@@ -36,6 +37,7 @@ export interface ChartUIState {
 export interface ChartUIActions {
   setUsername: (username: string) => void
   setTheme: (theme: ThemeName) => void
+  setMode: (mode: ThemeMode) => void
   setFormat: (format: string) => void
   setBg: (bg: boolean) => void
   setOnlyGrid: (onlyGrid: boolean) => void
@@ -54,7 +56,6 @@ export interface ChartUIActions {
 export interface ChartUIComputed {
   currentPreset: PresetKey | "custom"
   chartParams: ChartParams
-  dimensionsParams: ChartDimensionsParams
 }
 
 /**
@@ -64,6 +65,7 @@ export function useChartUI() {
   // Basic settings
   const [username, setUsername] = useState("vemec")
   const [theme, setTheme] = useState<ThemeName>("github")
+  const [mode, setMode] = useState<ThemeMode>("light")
   const [format, setFormat] = useState("svg")
 
   // Visual settings
@@ -181,6 +183,7 @@ export function useChartUI() {
   const chartParams: ChartParams = {
     username,
     theme,
+    mode,
     format,
     bg,
     onlyGrid,
@@ -196,20 +199,10 @@ export function useChartUI() {
     selectedPreset,
   }
 
-  const dimensionsParams: ChartDimensionsParams = {
-    size,
-    gap,
-    margin,
-    showDays,
-    onlyGrid,
-    showScale,
-    showUsername,
-    showMonths,
-  }
-
   const state: ChartUIState = {
     username,
     theme,
+    mode,
     format,
     bg,
     onlyGrid,
@@ -229,6 +222,7 @@ export function useChartUI() {
   const actions: ChartUIActions = {
     setUsername,
     setTheme,
+    setMode,
     setFormat,
     setBg,
     setOnlyGrid,
@@ -247,7 +241,6 @@ export function useChartUI() {
   const computed: ChartUIComputed = {
     currentPreset,
     chartParams,
-    dimensionsParams,
   }
 
   return {

@@ -1,12 +1,10 @@
 "use client"
 
-import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { PRESETS } from "@/lib/presets"
-import { THEMES } from "@/lib/themes"
+import { THEMES, type ThemeMode } from "@/lib/themes"
 import { useChartUrl } from "@/hooks/useChartUrl"
-import { useChartDimensions } from "@/hooks/useChartDimensions"
 import { useChartUI } from "@/hooks/useChartUI"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -15,13 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { type ThemeName } from "@/lib/themes"
 import { type PresetKey } from "@/lib/presets"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { ChartInline } from "@/components/chart-inline"
 
 export default function Page() {
   const { state, actions, computed } = useChartUI()
 
   // Use other hooks with computed parameters
   const chartUrl = useChartUrl(computed.chartParams)
-  const chartDimensions = useChartDimensions(computed.dimensionsParams)
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -63,6 +61,20 @@ export default function Page() {
                         ).join(' ')}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Mode */}
+              <div className="space-y-2">
+                <Label>Mode</Label>
+                <Select value={state.mode} onValueChange={(value) => value && actions.setMode(value as ThemeMode)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="light">Light</SelectItem>
+                    <SelectItem value="dark">Dark</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -248,17 +260,23 @@ export default function Page() {
             <CardTitle>Generated Chart</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center">
-              <Image
-                src={chartUrl}
-                alt="GitHub Activity Chart"
-                width={chartDimensions.width}
-                height={chartDimensions.height}
-                className="border rounded-lg shadow-lg max-w-full h-auto"
-                unoptimized
-                onError={(e) => {
-                  e.currentTarget.src = '/api/placeholder.svg'
-                }}
+            <div className="flex justify-center min-h-50 items-center">
+              <ChartInline
+                username={state.username}
+                theme={state.theme}
+                mode={state.mode}
+                bg={state.bg}
+                color={state.color}
+                radius={state.radius[0]}
+                gap={state.gap[0]}
+                size={state.size[0]}
+                margin={state.margin[0]}
+                onlyGrid={state.onlyGrid}
+                showMonths={state.showMonths}
+                showDays={state.showDays}
+                showScale={state.showScale}
+                showUsername={state.showUsername}
+                className="border rounded-lg shadow-lg max-w-full h-auto bg-white overflow-hidden"
               />
             </div>
             <div className="mt-6 space-y-4">
