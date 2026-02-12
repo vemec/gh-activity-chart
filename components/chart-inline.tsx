@@ -70,7 +70,7 @@ export function ChartInline(options: ChartInlineProps) {
   if (!svgContent) return null
 
   return (
-    <div 
+    <div
       className={options.className}
       dangerouslySetInnerHTML={{ __html: svgContent }}
     />

@@ -137,6 +137,8 @@ export function useChartUI() {
     }
 
     const preset = PRESETS[presetKey]
+
+    // Apply preset values
     setBg(preset.bg)
     setOnlyGrid(preset.grid)
     setMargin([preset.margin])
@@ -144,11 +146,23 @@ export function useChartUI() {
     setGap([preset.gap])
     setSize([preset.size || 10])
     setColor("") // No custom color for presets
+
     // Set the boolean values directly from preset
     setShowMonths(preset.months)
     setShowDays(preset.days)
     setShowScale(preset.scale)
     setShowUsername(preset.username)
+
+    // Update saved values to match preset
+    if (preset.grid) {
+      setSavedValues({
+        showMonths: preset.months,
+        showDays: preset.days,
+        showScale: preset.scale,
+        showUsername: preset.username,
+      })
+    }
+
     setSelectedPreset(presetKey)
   }
 
@@ -174,10 +188,12 @@ export function useChartUI() {
     return "custom" as const
   }, [bg, onlyGrid, margin, radius, gap, size, color, showMonths, showDays, showScale, showUsername])
 
-  // Update selectedPreset when settings change
+  // Auto-switch to custom only when user makes a manual change
   useEffect(() => {
-    setSelectedPreset(currentPreset)
-  }, [currentPreset])
+    if (selectedPreset !== "custom" && currentPreset === "custom") {
+      setSelectedPreset("custom")
+    }
+  }, [currentPreset, selectedPreset])
 
   // Computed values for other hooks
   const chartParams: ChartParams = {

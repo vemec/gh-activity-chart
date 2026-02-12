@@ -85,13 +85,19 @@ export function generateSVG(data: ContributionData, options: SVGOptions): string
     }
   }
 
-  const displayWeeks = weeks; 
+  const displayWeeks = weeks;
   const width = displayWeeks.length * (cellSize + gap) + (margin * 2) + labelSpaceLeft;
-  const scaleSpace = (!onlyGrid && showScale) ? 20 : 0;
-  const usernameSpace = (!onlyGrid && showUsername) ? 20 : 0;
+
+  // Bottom space calculation: scale and username are side-by-side, so we take the max height
+  const scaleHeight = 11; // Height of the scale component
+  const usernameHeight = 15; // Height of the username text
+  const showBottomElements = !onlyGrid && (showScale || showUsername);
+  const bottomSpace = showBottomElements
+    ? Math.max(showScale ? scaleHeight : 0, showUsername ? usernameHeight : 0) + 20 // +20 for separation from grid
+    : 0;
   const monthsSpace = showMonths ? 20 : 0;
 
-  const height = 7 * cellSize + 6 * gap + (margin * 2) + scaleSpace + usernameSpace + monthsSpace;
+  const height = 7 * cellSize + 6 * gap + (margin * 2) + bottomSpace + monthsSpace;
 
   // Build SVG manually
   let svgContent = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
@@ -126,13 +132,15 @@ export function generateSVG(data: ContributionData, options: SVGOptions): string
     const textColor = mode === 'dark' ? '#c9d1d9' : '#24292e';
     const daysToShow = [1, 3, 5]; // Monday, Wednesday, Friday
     daysToShow.forEach((dayIndex) => {
-      const y = margin + labelSpaceTop + dayIndex * (cellSize + gap) + cellSize / 2 + 3; 
+      const y = margin + labelSpaceTop + dayIndex * (cellSize + gap) + cellSize / 2 + 3;
       svgContent += `<text x="${margin + 25}" y="${y}" font-family="Figtree, system-ui, sans-serif" font-size="9" font-weight="400" fill="${textColor}" opacity="0.6" text-anchor="end">${dayNames[dayIndex]}</text>`;
     });
   }
 
   // Add grid
   const gridStartY = margin + labelSpaceTop;
+  const gridEndY = gridStartY + 7 * cellSize + 6 * gap;
+
   displayWeeks.forEach((week, wi) => {
     const weekStartX = margin + labelSpaceLeft + wi * (cellSize + gap);
     week.forEach((day, di) => {
@@ -146,38 +154,40 @@ export function generateSVG(data: ContributionData, options: SVGOptions): string
 
   // Add scale
   if (showScale) {
-    const scaleY = height - margin - (showUsername ? 40 : 27);
+    const scaleStartY = gridEndY + 18;
     const textColor = mode === 'dark' ? '#c9d1d9' : '#24292e';
 
-    const lessTextWidth = 25; 
+    const lessTextWidth = 25;
     const scaleSize = cellSize - 2;
     const scaleGap = gap;
     const scaleWidth = colors.length * (scaleSize + scaleGap) - scaleGap;
-    const moreTextWidth = 30; 
+    const moreTextWidth = 30;
     const totalScaleWidth = lessTextWidth + scaleWidth + moreTextWidth + 20;
 
     const chartAreaEndX = margin + labelSpaceLeft + (displayWeeks.length - 1) * (cellSize + gap) + cellSize;
     const scaleStartX = chartAreaEndX - totalScaleWidth;
 
-    svgContent += `<text x="${scaleStartX}" y="${scaleY}" font-family="Figtree, system-ui, sans-serif" font-size="9" font-weight="400" fill="${textColor}" opacity="0.6">Less</text>`;
+    svgContent += `<g>`;
+    svgContent += `<text x="${scaleStartX}" y="${scaleStartY}" font-family="Figtree, system-ui, sans-serif" font-size="9" font-weight="400" fill="${textColor}" opacity="0.6">Less</text>`;
 
     const squaresStartX = scaleStartX + lessTextWidth + 5;
     colors.forEach((color, i) => {
       const x = squaresStartX + i * (scaleSize + scaleGap);
-      svgContent += `<rect x="${x}" y="${scaleY - scaleSize}" width="${scaleSize}" height="${scaleSize}" fill="${color}" rx="${radius}" ry="${radius}"/>`;
+      svgContent += `<rect x="${x}" y="${scaleStartY - scaleSize}" width="${scaleSize}" height="${scaleSize}" fill="${color}" rx="${radius}" ry="${radius}"/>`;
     });
 
     const moreX = squaresStartX + colors.length * (scaleSize + scaleGap) - scaleGap + 5;
-    svgContent += `<text x="${moreX}" y="${scaleY}" font-family="Figtree, system-ui, sans-serif" font-size="9" font-weight="400" fill="${textColor}" opacity="0.6">More</text>`;
+    svgContent += `<text x="${moreX}" y="${scaleStartY}" font-family="Figtree, system-ui, sans-serif" font-size="9" font-weight="400" fill="${textColor}" opacity="0.6">More</text>`;
+    svgContent += `</g>`;
   }
 
   // Add username
   if (showUsername) {
-    const usernameY = height - margin - 10;
+    const usernameY = gridEndY + 20;
     const textColor = mode === 'dark' ? '#c9d1d9' : '#24292e';
     const usernameX = margin + labelSpaceLeft;
 
-    svgContent += `<text x="${usernameX}" y="${usernameY}" font-family="Figtree, system-ui, sans-serif" font-size="10" font-weight="500" fill="${textColor}" opacity="0.8">${options.username}</text>`;
+    svgContent += `<text x="${usernameX}" y="${usernameY}" font-family="Figtree, system-ui, sans-serif" font-size="13" font-weight="600" fill="${textColor}" opacity="0.9">@${options.username}'s contributions</text>`;
   }
 
   svgContent += '</svg>';
